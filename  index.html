@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>채팅형 다마고치 — PWA</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ff7aa2">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<style>
+:root{
+  --bg:#FFF8F0;
+  --card:#fff;
+  --accent:#ff7aa2;
+  --muted:#9aa3ad;
+  --shadow: 0 10px 25px rgba(0,0,0,0.08);
+  font-family: "Apple SD Gothic Neo", "Noto Sans KR", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+html,body{height:100%;margin:0;background:linear-gradient(180deg,#FFF8F0 0%, #FFF3EE 100%);color:#333}
+.wrap{max-width:760px;margin:28px auto;padding:20px;}
+header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.logo{width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,#ffd4e0,#ffd3b6);display:flex;align-items:center;justify-content:center;font-size:34px;box-shadow:var(--shadow)}
+h1{font-size:20px;margin:0}
+.card{background:var(--card);border-radius:14px;padding:16px;box-shadow:var(--shadow)}
+.game{
+  display:grid;
+  grid-template-columns: 260px 1fr;
+  gap:16px;
+  margin-top:12px;
+}
+.pet-card{padding:14px;border-radius:10px;display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center}
+.pet{
+  width:170px;height:170px;border-radius:20px;background:linear-gradient(180deg,#fff,#ffe8f2);display:flex;align-items:center;justify-content:center;font-size:86px;box-shadow:0 6px 18px rgba(0,0,0,0.06);
+}
+.stats{width:100%}
+.stat{display:flex;align-items:center;justify-content:space-between;margin:8px 0}
+.bar{height:10px;background:#eee;border-radius:999px;flex:1;margin-left:8px;margin-right:8px;overflow:hidden}
+.bar > i{display:block;height:100%;background:linear-gradient(90deg,#ffd1e4,#ff9bb7);border-radius:999px;width:0%}
+.controls{display:flex;gap:8px;flex-wrap:wrap}
+button{background:var(--accent);border:0;color:#fff;padding:10px 12px;border-radius:10px;font-weight:600;cursor:pointer;box-shadow:0 6px 16px rgba(255,122,162,0.14)}
+button.secondary{background:#fff;color:#333;border:1px solid #eee;box-shadow:none}
+.log{height:220px;overflow:auto;padding:12px;border-radius:8px;background:#fafafa;border:1px dashed #f1e6ea}
+.meta{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:13px;color:var(--muted)}
+.name-input{display:flex;gap:8px;align-items:center}
+input[type="text"]{padding:8px;border-radius:8px;border:1px solid #eee;flex:1}
+.small{font-size:13px;color:var(--muted)}
+footer{margin-top:12px;font-size:12px;color:var(--muted);text-align:center}
+@media (max-width:720px){
+  .game{grid-template-columns:1fr; }
+  .pet{width:140px;height:140px;font-size:72px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">🐣</div>
+    <div>
+      <h1>채팅형 다마고치 — PWA</h1>
+      <div class="small">간단한 상호작용, 성장, 자동 저장 지원</div>
+    </div>
+  </header>
+
+  <div class="card game">
+    <div class="pet-card">
+      <div class="pet" id="petEmoji">🥚</div>
+
+      <div style="width:100%">
+        <div class="name-input">
+          <input type="text" id="petName" placeholder="다마고치 이름을 지어주세요" />
+          <button id="setName" class="secondary">설정</button>
+        </div>
+        <div class="meta" style="margin-top:8px">
+          <div id="ageText">나이: 0일 · 단계: 알</div>
+          <div id="lastSaved" class="small">저장됨: -</div>
+        </div>
+      </div>
+
+      <div style="width:100%;margin-top:10px" class="controls">
+        <button id="feedBtn">밥 주기 🍚</button>
+        <button id="playBtn">놀아주기 🎾</button>
+        <button id="cleanBtn">씻기 🚿</button>
+        <button id="sleepBtn" class="secondary">잠들기 😴</button>
+        <button id="resetBtn" class="secondary">처음부터</button>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card stats">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <strong>상태 창</strong>
+          <div class="small">시간이 흐르면 수치가 줄어들어요</div>
+        </div>
+
+        <div class="stat">
+          <div>배고픔</div>
+          <div class="bar"><i id="hungerBar" style="width:100%"></i></div>
+          <div id="hungerVal">100%</div>
+        </div>
+
+        <div class="stat">
+          <div>기분</div>
+          <div class="bar"><i id="moodBar" style="width:100%"></i></div>
+          <div id="moodVal">100%</div>
+        </div>
+
+        <div class="stat">
+          <div>청결</div>
+          <div class="bar"><i id="cleanBar" style="width:100%"></i></div>
+          <div id="cleanVal">100%</div>
+        </div>
+
+        <div style="margin-top:8px" class="small">경고: 기분/배고픔/청결이 0이면 건강 점수 하락!</div>
+      </div>
+
+      <div class="card" style="padding:12px">
+        <strong>다마고치 로그</strong>
+        <div class="log" id="logBox"></div>
+      </div>
+
+      <div class="card small">
+        <div><strong>설명</strong></div>
+        <ul style="margin:6px 0 0 18px;padding:0">
+          <li>오픈한 상태에서 매 10초마다 수치 감소 (탭이 켜져 있을 때 작동)</li>
+          <li>동작(밥/놀기/씻기)으로 즉시 수치 회복</li>
+          <li>성장: 알 → 아기 → 아이 → 성체(특별 진화 조건 가능)</li>
+          <li>상태는 브라우저에 자동 저장됩니다.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <footer>저장 방식: localStorage · 만든이: 당신의 챗 가이드</footer>
+</div>
+
+<script>
+const defaultState = {
+  name: "",
+  createdAt: Date.now(),
+  ageSeconds: 0,
+  stage: "egg",
+  hunger: 100,
+  mood: 100,
+  clean: 100,
+  lastTick: Date.now(),
+  logs: ["안녕! 새로운 다마고치가 태어났어요. 이름을 지어주세요!"]
+};
+
+const LSKEY = "chat-tamagotchi-v1";
+let state = loadState() || defaultState;
+let decayInterval = 10000;
+let decayAmounts = { hunger: 4, mood: 3, clean: 2 };
+let tickTimer = null;
+
+const el = {
+  petEmoji: document.getElementById("petEmoji"),
+  petName: document.getElementById("petName"),
+  setName: document.getElementById("setName"),
+  ageText: document.getElementById("ageText"),
+  lastSaved: document.getElementById("lastSaved"),
+  hungerBar: document.getElementById("hungerBar"),
+  moodBar: document.getElementById("moodBar"),
+  cleanBar: document.getElementById("cleanBar"),
+  hungerVal: document.getElementById("hungerVal"),
+  moodVal: document.getElementById("moodVal"),
+  cleanVal: document.getElementById("cleanVal"),
+  feedBtn: document.getElementById("feedBtn"),
+  playBtn: document.getElementById("playBtn"),
+  cleanBtn: document.getElementById("cleanBtn"),
+  sleepBtn: document.getElementById("sleepBtn"),
+  resetBtn: document.getElementById("resetBtn"),
+  logBox: document.getElementById("logBox")
+};
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(LSKEY);
+    if(!raw) return null;
+    const obj = JSON.parse(raw);
+    if(!obj.createdAt) obj.createdAt = Date.now();
+    return obj;
+  }catch(e){
+    console.warn("load error", e);
+    return null;
+  }
+}
+
+function saveState(){
+  state.lastTick = Date.now();
+  localStorage.setItem(LSKEY, JSON.stringify(state));
+  el.lastSaved.textContent = "저장됨: " + new Date().toLocaleString();
+}
+
+function clamp(v){ return Math.max(0, Math.min(100, Math.round(v))); }
+
+function render(){
+  el.petName.value = state.name;
+  el.hungerBar.style.width = state.hunger + "%";
+  el.moodBar.style.width = state.mood + "%";
+  el.cleanBar.style.width = state.clean + "%";
+  el.hungerVal.textContent = state.hunger + "%";
+  el.moodVal.textContent = state.mood + "%";
+  el.cleanVal.textContent = state.clean + "%";
+  const ageDays = Math.floor((Date.now() - state.createdAt)/1000/60/60/24);
+  el.ageText.textContent = `나이: ${ageDays}일 · 단계: ${stageLabel(state.stage)}`;
+  el.petEmoji.textContent = chooseEmoji();
+  el.logBox.innerHTML = state.logs.slice().reverse().map(l => `<div style="margin-bottom:6px">${l}</div>`).join("");
+}
+
+function stageLabel(s){
+  switch(s){
+    case "egg": return "알";
+    case "baby": return "아기";
+    case "child": return "아이";
+    case "adult": return "성체";
+    default: return s;
+  }
+}
+
+function chooseEmoji(){
+  const m = state.mood;
+  const isSad = m < 30;
+  if(state.stage === "egg") return "🥚";
+  if(state.stage === "baby") return isSad ? "😢" : "🐤";
+  if(state.stage === "child") return isSad ? "😿" : "🐶";
+  if(state.stage === "adult") return isSad ? "😵" : "🦄";
+  return "🐣";
+}
+
+function pushLog(text){
+  const time = new Date().toLocaleTimeString();
+  state.logs.push(`[${time}] ${text}`);
+  if(state.logs.length > 200) state.logs.shift();
+}
+
+function decayTick(){
+  const now = Date.now();
+  const elapsed = Math.max(1, Math.floor((now - state.lastTick) / decayInterval));
+  if(elapsed <= 0) return;
+  state.hunger = clamp(state.hunger - decayAmounts.hunger * elapsed);
+  state.mood = clamp(state.mood - decayAmounts.mood * elapsed);
+  state.clean = clamp(state.clean - decayAmounts.clean * elapsed);
+  state.ageSeconds += elapsed * (decayInterval/1000);
+  state.lastTick = now;
+
+  if(state.hunger === 0 || state.mood === 0 || state.clean === 0){
+    pushLog("상태가 좋지 않아요... 돌봐주세요!");
+  } else {
+    if(Math.random() < 0.12) {
+      const comments = ["콩이가 꼬르륵 소리를 내요","콩이가 신나게 뛰어요","콩이가 졸린 눈을 해요"];
+      pushLog(comments[Math.floor(Math.random()*comments.length)]);
+    }
+  }
+  checkGrowth();
+  saveState();
+  render();
+}
+
+function checkGrowth(){
+  const ageSecs = Math.floor((Date.now()-state.createdAt)/1000);
+  if(ageSecs >= 240 && state.stage !== "adult"){
+    state.stage = "adult";
+    pushLog(`${displayName()}이(가) 성체로 성장했어요! 🎉`);
+  } else if(ageSecs >= 90 && state.stage === "baby"){
+    state.stage = "child";
+    pushLog(`${displayName()}이(가) 아이로 성장했어요!`);
+  } else if(ageSecs >= 30 && state.stage === "egg"){
+    state.stage = "baby";
+    pushLog(`${displayName()}이(가) 부화했어요!`);
+  }
+}
+
+function displayName(){ return state.name || "다마고치"; }
+
+function feed(){
+  state.hunger = clamp(state.hunger + 30);
+  state.mood = clamp(state.mood + 6);
+  pushLog(`${displayName()}에게 밥을 줬어요. 배가 부르대요 🍚`);
+  saveState(); render();
+}
+function play(){
+  state.mood = clamp(state.mood + 28);
+  state.hunger = clamp(state.hunger - 8);
+  state.clean = clamp(state.clean - 6);
+  pushLog(`${displayName()}와(과) 신나게 놀았어요 🎉`);
+  saveState(); render();
+}
+function clean(){
+  state.clean = clamp(state.clean + 36);
+  state.mood = clamp(state.mood + 8);
+  pushLog(`${displayName()}를 씻겨줬어요 🚿`);
+  saveState(); render();
+}
+function sleep(){
+  pushLog(`${displayName()}가 잠들었어요... 😴`);
+  state.mood = clamp(state.mood + 12);
+  state.hunger = clamp(state.hunger - 6);
+  saveState(); render();
+}
+
+function resetAll(){
+  if(!confirm("정말 처음부터 시작할까요? 저장된 진행정보가 모두 지워집니다.")) return;
+  localStorage.removeItem(LSKEY);
+  state = JSON.parse(JSON.stringify(defaultState));
+  state.createdAt = Date.now();
+  state.lastTick = Date.now();
+  saveState(); render();
+}
+
+el.feedBtn.addEventListener("click", feed);
+el.playBtn.addEventListener("click", play);
+el.cleanBtn.addEventListener("click", clean);
+el.sleepBtn.addEventListener("click", sleep);
+el.resetBtn.addEventListener("click", resetAll);
+el.setName.addEventListener("click", () => {
+  state.name = el.petName.value.trim();
+  pushLog(`이름이 "${displayName()}"(으)로 설정되었어요.`);
+  saveState(); render();
+});
+el.petName.addEventListener("keydown", (e)=>{ if(e.key === "Enter"){ el.setName.click(); }});
+
+function startTick(){
+  if(tickTimer) clearInterval(tickTimer);
+  decayTick();
+  tickTimer = setInterval(decayTick, decayInterval);
+}
+startTick();
+render();
+
+setInterval(saveState, 15000);
+
+document.addEventListener("visibilitychange", ()=>{
+  if(document.hidden){
+    if(tickTimer) clearInterval(tickTimer);
+    tickTimer = null;
+  } else {
+    decayTick();
+    startTick();
+  }
+});
+
+// register service worker for PWA
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js")
+    .then(() => console.log("Service Worker registered"))
+    .catch(err => console.error("SW registration failed:", err));
+}
+</script>
+</body>
+</html>
