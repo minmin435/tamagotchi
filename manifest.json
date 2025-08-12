@@ -1,10 +1,11 @@
+
 {
-  "name": "채팅형 다마고치",
-  "short_name": "다마고치",
-  "start_url": "tamagotchi-pwa.html",
+  "name": "귀여운 병아리 다마고치",
+  "short_name": "병아리 다마고치",
+  "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#FFF8F0",
-  "theme_color": "#ff7aa2",
+  "background_color": "#fffbe6",
+  "theme_color": "#ffb300",
   "icons": [
     {
       "src": "icon-192.png",

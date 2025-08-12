@@ -1,20 +1,17 @@
-self.addEventListener("install", e => {
+
+self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open("tamagotchi-cache").then(cache => {
-      return cache.addAll([
-        "/tamagotchi-pwa.html",
-        "/manifest.json",
-        "/icon-192.png",
-        "/icon-512.png"
-      ]);
-    })
+    caches.open('tamagotchi-store').then((cache) => cache.addAll([
+      './index.html',
+      './manifest.json',
+      './icon-192.png',
+      './icon-512.png'
+    ]))
   );
 });
 
-self.addEventListener("fetch", e => {
+self.addEventListener('fetch', (e) => {
   e.respondWith(
-    caches.match(e.request).then(response => {
-      return response || fetch(e.request);
-    })
+    caches.match(e.request).then((response) => response || fetch(e.request))
   );
 });
