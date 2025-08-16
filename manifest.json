@@ -1,0 +1,9 @@
+{
+  "name": "병아리 다마고치",
+  "short_name": "다마고치",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#fffbe6",
+  "theme_color": "#ffcc00",
+  "icons": []
+}

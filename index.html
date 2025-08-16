@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>병아리 다마고치</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>🐥 병아리 다마고치</h1>
+  <div id="game">
+    <canvas id="canvas" width="300" height="300"></canvas>
+    <div id="controls">
+      <button onclick="feed()">🍚 먹이</button>
+      <button onclick="play()">🎾 놀기</button>
+      <button onclick="clean()">🧹 청소</button>
+      <button onclick="sleep()">💤 잠자기</button>
+    </div>
+    <div id="status">
+      <p>배고픔: <span id="hunger"></span></p>
+      <p>행복: <span id="happiness"></span></p>
+      <p>청결: <span id="cleanliness"></span></p>
+      <p>에너지: <span id="energy"></span></p>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
